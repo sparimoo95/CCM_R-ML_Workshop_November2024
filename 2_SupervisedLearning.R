@@ -36,15 +36,19 @@ heart_glm_importances <- varImp(heart_glm) %>%
   rownames_to_column() %>%
   dplyr::rename(predictor = rowname) %>% 
   arrange(desc(Overall)) %>% # arrange variables according to their importance
-  top_n(5) # select top 5 most important variables
+  top_n(5) %>% # select top 5 most important variables
+  # clean up the predictor naming for plotting
+  mutate(predictor = as.factor(predictor))
+
+levels(heart_glm_importances$predictor) = c("Age", "HS Education", "Blood Glucose", "Male Sex", "Systolic BP")
 
 # 6. Visualize most important variables
-
-ggplot(heart_glm_importances, aes(x = predictor, y = Overall, fill = predictor)) +
+ggplot(heart_glm_importances, 
+       aes(x = predictor, y = Overall, fill = predictor)) +
   geom_col(show.legend = F, color = "black") + 
   labs(x = "Variable", y = "Estimate") +
   scale_fill_brewer(palette = 'Set3') + 
-  theme_minimal()
+  theme_classic(base_size = 24) 
 
 # 7. Look at the AUC and plot the ROC curve
 heart_glm_roc = roc(test_heart$TenYearCHD, heart_glm_pred)
@@ -63,7 +67,9 @@ heart_rf_pred = predict(heart_rf, newdata = test_heart, type = 'response')
 head(heart_rf_pred)
 
 # plot variable importance
-varImpPlot(heart_rf)
+varImpPlot(heart_rf, 
+           main = "Variable Importance for Predicting Heart Disease", 
+           bg = "brown")
 
 ##
 
@@ -89,6 +95,8 @@ heart_rf_chol_pred = predict(heart_rf_chol, newdata = test_heart_rf, 'response')
 head(heart_rf_chol_pred)
 
 # plot variable importance
-varImpPlot(heart_rf_chol)
+varImpPlot(heart_rf_chol, 
+           main = "Variable Importance for Predicting Cholesterol Levels", 
+           bg = "brown")
 
 
