@@ -5,7 +5,7 @@ setwd("/Users/shireenparimoo/Documents/Teaching/R Workshop - November 2024/data/
 #
 ## 00. Load libraries ----------------------------------------------------
 
-# install.packages("tidyverse", "caret", "pROC", "caTools", "randomForest", "tidymodels", "factoextra", "rpart.plot")
+# install.packages("tidyverse", "caret", "pROC", "caTools", "randomForest", "ranger", "tidymodels", "factoextra")
 library(tidyverse) # we will use this library, which comes with its own syntax
 library(pROC) # plot ROC curves and calculate area under the curve (AUC)
 library(caret) # specify models
@@ -15,7 +15,7 @@ library(randomForest) # random forest model
 library(tidymodels)
 library(factoextra) # k means viz
 library(corrplot) # correlation plot
-library(rpart.plot) # random forest plots
+library(ranger) # random forest using caret
 # library(recipes) # preprocess data for clustering
 
 #
@@ -63,8 +63,5 @@ prepped_heart_df_cluster <- prepped_heart_df %>%
   as.data.frame() %>% 
   # remove rows with NAs
   na.omit()
-
-# look at correlations within the clustering dataset
-corrplot(cor(prepped_heart_df_cluster))
 
 #
