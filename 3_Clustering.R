@@ -3,7 +3,7 @@
 
 # df = prepped_heart_df_cluster (only contains numeric/continuous variables)
 
-# look at correlations within the clustering dataset
+# look at correlations within the clustering dataset 
 corrplot(cor(prepped_heart_df_cluster))
 
 set.seed(66)
@@ -15,26 +15,50 @@ heart_kmeans <- kmeans(prepped_heart_df_cluster, centers = 3, nstart = 25)
 #   1. cluster. A vector of integers indicating the cluster to which each point is allocated.
 #   2. centers. A matrix of cluster centers.
 #   3. size. The number of points in each cluster.
+#.  4. totss. The total sum of squares (within + between).
+#.  5. tot.withinss The total within-cluster sum of squares across clusters.
+#.  6. withinss. The within-cluster sum of squares for each cluster.
 
 heart_kmeans$cluster
 heart_kmeans$centers
 heart_kmeans$size
+heart_kmeans$totss
+heart_kmeans$tot.withinss
+heart_kmeans$withinss
+
+# what are the characteristics of each sub-group identified through clustering?
+aggregate(prepped_heart_df_cluster, by=list(cluster=heart_kmeans$cluster), mean)
 
 # visualize the clusters
-fviz_cluster(heart_kmeans, data = prepped_heart_df_cluster, ellipse.type = "convex")
+fviz_cluster(heart_kmeans, data = prepped_heart_df_cluster, ellipse.type = "convex", ggtheme = theme_bw())
 
 ## what is the optimal number of clusters?
+# uses silhouette method by default i.e., determines how well each object lies within its cluster (want to maximize)
+# can use `method = "wss"` for the within-cluster sum of squares (want to minimize)
 fviz_nbclust(
   prepped_heart_df_cluster, 
   kmeans)
 
+
+fviz_nbclust(
+  prepped_heart_df_cluster, 
+  kmeans,
+  method = "wss")
+
 ## run k-means clustering with 2 clusters
 heart_kmeans_optimal = kmeans(prepped_heart_df_cluster, centers = 2, nstart = 25)
-fviz_cluster(heart_kmeans_optimal, data = prepped_heart_df_cluster, ellipse.type = "convex")
+fviz_cluster(heart_kmeans_optimal, data = prepped_heart_df_cluster, ellipse.type = "convex", ggtheme = theme_bw())
 
 # look at cluster characteristics in the updated clustering model - what can you tell about the sub-groups? 
-heart_kmeans_optimal$cluster
-heart_kmeans_optimal$centers
-heart_kmeans_optimal$size
+aggregate(prepped_heart_df_cluster, by=list(cluster=heart_kmeans_optimal$cluster), mean)
+
+# look at descriptive stats on the unscaled data
+clustered_df <- prepped_heart_df %>% 
+  # only keep the unscaled continuous variables
+  select(c("age", "cigsPerDay", "totChol", "sysBP", "diaBP", "heartRate", "glucose")) %>% 
+  # add a column containing the cluster assignments
+  mutate(Cluster = heart_kmeans_optimal$cluster) %>%
+  group_by(Cluster) %>%
+  summarise_all("mean")
 
 
