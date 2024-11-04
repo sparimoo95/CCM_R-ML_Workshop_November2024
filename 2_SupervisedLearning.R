@@ -67,28 +67,6 @@ varImpPlot(heart_rf)
 
 ##
 
-# fit a random forest model using caret
-heart_rf_caret <- train(as.factor(TenYearCHD) ~ ., 
-                        data = train_heart, 
-                        method = "ranger")
-heart_rf_caret
-
-# apply model to test set to generate predictions
-heart_rf_caret_pred <- predict(heart_rf_caret, test_heart)
-# compare predicted outcome and true outcome
-confusionMatrix(heart_rf_caret_pred, as.factor(test_heart$TenYearCHD))
-
-
-# random forest with cross-validation
-set.seed(66)
-heart_rf_caret_cv <- train(as.factor(TenYearCHD) ~ ., 
-                        data = train_heart, 
-                        method = "ranger",
-                        trControl = trainControl(method = "cv", number = 5))
-heart_rf_caret_cv
-heart_rf_caret_cv_pred <- predict(heart_rf_caret_cv, test_heart)
-confusionMatrix(heart_rf_caret_cv_pred, as.factor(test_heart$TenYearCHD))
-
 #
 # 3. Random Forest - Regression --------------------------------------------------------
 
@@ -113,16 +91,4 @@ head(heart_rf_chol_pred)
 # plot variable importance
 varImpPlot(heart_rf_chol)
 
-# 3. Tabulaheart_rf# 3. Tabulate values of BMI, then predict heart disease for all of them
-
-grid_set = data.frame(sysBP = seq(80, 300, by = 10))
-grid_pred = data.frame(grid_set, heart_rf_pred = predict(heart_rf, newdata = grid_set))
-
-ggplot(data = prepped_heart_df, aes(x = sysBP, y=totChol, col = split_heart)) + 
-  geom_point() +  
-  geom_point(data = grid_pred, aes(x = sysBP, y=heart_rf_pred), col = 'blue', pch = 1) +
-  scale_color_manual(values = c("TRUE" = "deepskyblue", "FALSE" = "orange")) + 
-  theme_bw() + 
-  geom_smooth(method = 'lm', col = 'magenta', se = 0) + 
-  geom_smooth(method = 'lm', se = 0)
 
