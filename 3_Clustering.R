@@ -4,7 +4,7 @@
 # df = prepped_heart_df_cluster (only contains numeric/continuous variables)
 
 # look at correlations within the clustering dataset 
-corrplot(cor(prepped_heart_df_cluster))
+corrplot(cor(prepped_heart_df_cluster), tl.col = "black")
 
 set.seed(66)
 
@@ -30,16 +30,18 @@ heart_kmeans$withinss
 aggregate(prepped_heart_df_cluster, by=list(cluster=heart_kmeans$cluster), mean)
 
 # visualize the clusters
-fviz_cluster(heart_kmeans, data = prepped_heart_df_cluster, ellipse.type = "convex", ggtheme = theme_bw())
+fviz_cluster(heart_kmeans, 
+             data = prepped_heart_df_cluster, 
+             ellipse.type = "convex", 
+             ggtheme = theme_classic(base_size = 20))
 
 ## what is the optimal number of clusters?
 # uses silhouette method by default i.e., determines how well each object lies within its cluster (want to maximize)
-# can use `method = "wss"` for the within-cluster sum of squares (want to minimize)
 fviz_nbclust(
   prepped_heart_df_cluster, 
   kmeans)
 
-
+# can use `method = "wss"` for the within-cluster sum of squares (want to minimize)
 fviz_nbclust(
   prepped_heart_df_cluster, 
   kmeans,
@@ -47,7 +49,10 @@ fviz_nbclust(
 
 ## run k-means clustering with 2 clusters
 heart_kmeans_optimal = kmeans(prepped_heart_df_cluster, centers = 2, nstart = 25)
-fviz_cluster(heart_kmeans_optimal, data = prepped_heart_df_cluster, ellipse.type = "convex", ggtheme = theme_bw())
+fviz_cluster(heart_kmeans_optimal, 
+             data = prepped_heart_df_cluster, 
+             ellipse.type = "convex", 
+             ggtheme = theme_classic(base_size = 20))
 
 # look at cluster characteristics in the updated clustering model - what can you tell about the sub-groups? 
 aggregate(prepped_heart_df_cluster, by=list(cluster=heart_kmeans_optimal$cluster), mean)
@@ -60,5 +65,5 @@ clustered_df <- prepped_heart_df %>%
   mutate(Cluster = heart_kmeans_optimal$cluster) %>%
   group_by(Cluster) %>%
   summarise_all("mean")
-
+clustered_df
 
