@@ -37,9 +37,10 @@ heart_glm_importances <- varImp(heart_glm) %>%
   dplyr::rename(predictor = rowname) %>% 
   arrange(desc(Overall)) %>% # arrange variables according to their importance
   top_n(5) %>% # select top 5 most important variables
-  # clean up the predictor naming for plotting
+  # convert predictor to factor
   mutate(predictor = as.factor(predictor))
 
+# clean up the naming of the predictors 
 levels(heart_glm_importances$predictor) = c("Age", "HS Education", "Blood Glucose", "Male Sex", "Systolic BP")
 
 # 6. Visualize most important variables
@@ -50,31 +51,52 @@ ggplot(heart_glm_importances,
   scale_fill_brewer(palette = 'Set3') + 
   theme_classic(base_size = 24) 
 
-# 7. Look at the AUC and plot the ROC curve
+# 7. Plot the ROC curve and estimate the AUC
 heart_glm_roc = roc(test_heart$TenYearCHD, heart_glm_pred)
 heart_glm_roc
+# model has a ~73% probability of correctly distinguishing between a positive and a negative instance
 plot(heart_glm_roc)
 
-## CHALLENGE: how does the AUC change with a different training/test split?
+## CHALLENGE: do the most important predictors change with a different training/test split?
+## CHALLENGE: how does the AUC change with a different training/test split? 
 
 #
-# 2. Random Forest - Classification --------------------------------------------------------
+# 02. Random Forest - Classification --------------------------------------------------------
 
 set.seed(66)
-heart_rf = randomForest(TenYearCHD ~ ., data = train_heart)
-predict(heart_rf, newdata = test_heart)
-heart_rf_pred = predict(heart_rf, newdata = test_heart, type = 'response')
-head(heart_rf_pred)
+
+split_heart_rf = sample.split(prepped_heart_df$TenYearCHD, .5)
+
+train_heart_rf = prepped_heart_df[split_heart_rf, ]
+test_heart_rf  = prepped_heart_df[!split_heart_rf, ]
+
+heart_rf = randomForest(TenYearCHD ~ ., data = train_heart_rf, 
+                        importance = T,  # assesses importance of each predictor for accuracy
+                        ntree = 500,
+                        mtry = 10)
+heart_rf
+
+## OUTPUT: includes a confusion matrix, out-of-bag (OOB) error i.e., misclassification rate
+## number of trees (you can specify this as well) and number of variables randomly sampled as candidates
+## to split by at each split
+
+predict(heart_rf, newdata = test_heart_rf)
+heart_rf_pred = predict(heart_rf, newdata = test_heart_rf, type = 'response')
 
 # plot variable importance
 varImpPlot(heart_rf, 
            main = "Variable Importance for Predicting Heart Disease", 
            bg = "brown")
 
-##
+## mean decrease accuracy = how much accuracy would decrease if that variable is removed from the model
+## mean decrease gini = how often a randomly chosen element of a set would be incorrectly labeled if it were labeled randomly
+
+## is the output from random forest classification similar to logistic regression?
+## which variables are most important for predicting heart disease? 
+## how does the output change with a different training/test split?
 
 #
-# 3. Random Forest - Regression --------------------------------------------------------
+# 03. Random Forest - Regression --------------------------------------------------------
 
 ## GOAL: predict cholesterol levels
 
@@ -82,21 +104,21 @@ varImpPlot(heart_rf,
 set.seed(66)
 
 # 1. split up the dataset into a training and test set
-split_heart_rf = sample.split(prepped_heart_df$sysBP, .8)
+split_heart_rf_linear = sample.split(prepped_heart_df$sysBP, .5)
 
-train_heart_rf = prepped_heart_df[split_heart, ]
-test_heart_rf  = prepped_heart_df[!split_heart, ]
+train_heart_rf_linear = prepped_heart_df[split_heart_rf_linear, ]
+test_heart_rf_linear  = prepped_heart_df[!split_heart_rf_linear, ]
 
 # 2. Build a random forest model to predict cholesterol levels
-heart_rf_chol = randomForest(totChol ~ ., data = train_heart_rf)
+heart_rf_chol = randomForest(totChol ~ ., data = train_heart_rf_linear,
+                             importance = T)
 heart_rf_chol
 
-heart_rf_chol_pred = predict(heart_rf_chol, newdata = test_heart_rf, 'response')
-head(heart_rf_chol_pred)
+heart_rf_chol_pred = predict(heart_rf_chol, newdata = test_heart_rf_linear, 'response')
 
 # plot variable importance
 varImpPlot(heart_rf_chol, 
            main = "Variable Importance for Predicting Cholesterol Levels", 
            bg = "brown")
-
+## %Increase in MSE = how much the mean squared error would increase if a variable were omitted from the model
 

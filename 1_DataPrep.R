@@ -16,7 +16,6 @@ library(tidymodels)
 library(factoextra) # k means viz
 library(corrplot) # correlation plot
 library(ranger) # random forest using caret
-# library(recipes) # preprocess data for clustering
 
 #
 ## 01. Import data ------------------------------------------------------
@@ -42,7 +41,7 @@ prepped_heart_df <- raw_heart_df %>%  # this is a pipe; it allows you to perform
             as.numeric) %>% 
   # let's also change the values in the male and education columns to make them more descriptive
   # and convert them to factors all at once
-  mutate(sex = as.factor(ifelse(male == 1, "M", "F")),                              
+  mutate(sex = as.factor((ifelse(male == 1, "M", "F"))),                              
          education = as.factor(case_when(education == 1 ~ "< High School",
                                          education == 2 ~ "High School Graduate",
                                          education == 3 ~ "Some College",
@@ -57,11 +56,16 @@ str(prepped_heart_df)
 # prepare the dataset for clustering i.e., only keep numeric/continuous variables
 prepped_heart_df_cluster <- prepped_heart_df %>% 
   select(c("age", "cigsPerDay", "totChol", "sysBP", "diaBP", "heartRate", "glucose")) %>% 
-  # scale and center the numeric variables; contrast code the categorical variables
+  # scale and center the numeric variables
   scale() %>%
   # convert to data frame
   as.data.frame() %>% 
   # remove rows with NAs
   na.omit()
 
-#
+# take a look at heart disease rates
+
+plyr::count(prepped_heart_df$TenYearCHD)
+
+# 3099 patients do not develop heart disease, 557 patients do (~15.2%) 
+
